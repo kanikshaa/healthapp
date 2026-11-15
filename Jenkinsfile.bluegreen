@@ -1,0 +1,39 @@
+pipeline {
+  agent any
+  environment { IMAGE = "kkanikshaa/healthapp:${BUILD_NUMBER}" }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Build Image') {
+      steps { sh 'docker build -t $IMAGE .' }
+    }
+    stage('Push Image') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub',
+          usernameVariable: 'U', passwordVariable: 'P')]) {
+          sh 'echo $P | docker login -u $U --password-stdin'
+          sh 'docker push $IMAGE'
+          sh 'docker logout'
+        }
+      }
+    }
+    stage('Deploy Green') {
+      steps {
+        sh 'sed "s|GREEN_TAG|${BUILD_NUMBER}|" bluegreen/green.yaml | kubectl apply -f -'
+        sh 'kubectl rollout status deployment/healthapp-green --timeout=120s'
+      }
+    }
+    stage('Smoke Test Green') {
+      steps {
+        sh 'kubectl get pods -l version=green'
+      }
+    }
+    stage('Switch Traffic to Green') {
+      steps {
+        input message: 'Switch live traffic to Green?'
+        sh """kubectl patch service healthapp-bg-svc -p '{"spec":{"selector":{"app":"healthapp","version":"green"}}}'"""
+      }
+    }
+  }
+}

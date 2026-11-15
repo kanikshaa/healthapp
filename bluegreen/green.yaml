@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthapp-green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: healthapp
+      version: green
+  template:
+    metadata:
+      labels:
+        app: healthapp
+        version: green
+    spec:
+      containers:
+      - name: healthapp
+        image: kkanikshaa/healthapp:GREEN_TAG
+        ports:
+        - containerPort: 5000

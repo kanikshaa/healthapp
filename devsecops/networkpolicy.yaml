@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: healthapp-secure-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: healthapp-secure
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - port: 5000

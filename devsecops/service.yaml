@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthapp-secure-svc
+spec:
+  selector:
+    app: healthapp-secure
+  ports:
+  - port: 80
+    targetPort: 5000
